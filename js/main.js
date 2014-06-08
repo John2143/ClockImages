@@ -2,11 +2,16 @@ var nnnnnnnnnnnnnn;
 
 !function(){
 $(document).ready(function(){
-	
+	function edgyobject(w,h,l,t){
+		this.height = h;
+		this.width = w;
+		this.top = t;
+		this.left = l;
+	}
 	const radius = 200;
 	const picx = 50;
 	const picy = 50;
-	const numpics = 10;
+	const numpics = 12;
 	const buffer = 0;
 	const animationSpeed = 400;
 	
@@ -20,30 +25,15 @@ $(document).ready(function(){
 					top: Math.cos(pipcs*num)*radius+radius+buffer
 			};
 	};
-	var normalizeImage = function(bw,bh,elem){
-		function edgyobject(w,h,l,t){
-			this.height = h;
-			this.width = w;
-			this.top = t;
-			this.left = l;
-		};
-		const nh = elem.naturalHeight, nw = elem.naturalWidth;
-		if(bw >= nw && bh >= nh){
-			return edgyobject(nw,nh,(bw-nw)/2,(bh-nh)/2);
+	var normalizeImage = function(bw,bh,nw,nh){
+
+		var ratio = nw/nh;
+		if (ratio > 1){
+			var change = nw/bw;
+			return new edgyobject(bw,nh/change,0,0);
 		}else{
-			var scale = 0;
-			if(bw < nw && bh < nh){
-				scale = 0;
-				return edgyobject(nw,nh,(bw-nw)/2,(bh-nh)/2);
-			}else if(bw < nw){
-				scale = bw/nw;
-				var offset1 = Math.round(nh*scale);
-				return edgyobject(bw,offset1,0,(bh-offset1)/2);
-			}else{ //bh < nh
-				scale = bh/nh;
-				var offset1 = Math.round(nw*scale);
-				return edgyobject(offset1,bh,(bw-offset1)/2,0);
-			}
+			var change = nh/bh;
+			return new edgyobject(nw/change,bh,0,0);
 		}
 	};
 	var toggleState = function(num){
@@ -60,6 +50,9 @@ $(document).ready(function(){
 					// (animationSpeed/(2*numpics))*thes.attr("clockID")
 				// );
 			});
+			$(".clock-image")
+				.animate(new edgyobject(picx,picy,0,0),animationSpeed)
+			;
 			expandedImage = 0;
 			log("Expanding...");
 		}else{
@@ -69,6 +62,10 @@ $(document).ready(function(){
 			$(".clock-imageholder[clockID!='"+num+"']")
 				.animate({left: 0, top:0},animationSpeed)
 			;
+			$(".clock-image[clockID='"+num+"']")
+				.each(function(){
+					$(this).animate(normalizeImage(radius*2-picx,radius*2-picy,this.naturalWidth,this.naturalHeight),animationSpeed);
+			});
 			expandedImage = num;
 			log("Clicked " + num);
 		}
@@ -76,13 +73,20 @@ $(document).ready(function(){
 	log("wow");
 	for(var i = 1; i <= numpics; i++){
 		startpos = getClockPos(i);
-		log(i + ": " + startpos.left + ", " + startpos.top);
+		var img = $("<img/>",{class:"clock-image",clockID:i,src:"./images/"+i+".jpg"})
+			//.html("spooky"+ i)
+			.css("width",picx)
+			.css("height",picy)
+			.css("left",0)
+			.css("top",0)
+		;
 		$("<div/>",{class:"vis clock-imageholder",clockID:i})
 			//.html("spooky"+ i)
 			.css("width",picx)
 			.css("height",picy)
 			.css("left",startpos.left)
 			.css("top",startpos.top)
+			.append(img)
 			.appendTo(cont)
 		;
 	}
